@@ -53,15 +53,15 @@ button, input, textarea { font: inherit; }
   justify-content: space-between;
   min-height: 150px;
   margin: 20px 0;
-  padding: 24px 28px;
+  padding: 26px 28px;
   overflow: hidden;
   background: linear-gradient(135deg, #f3fff8, #e5f7ed);
   border: 1px solid #b7dfc8;
   border-radius: 18px;
   box-shadow: 0 5px 18px rgba(8, 116, 67, .08);
 }
-.balance-card.has-sticker { padding-right: 255px; }
-.balance-main { position: relative; z-index: 3; }
+.balance-card.has-sticker { padding-right: 230px; }
+.balance-main { position: relative; z-index: 2; }
 .balance-card small {
   display: block;
   margin-bottom: 8px;
@@ -75,14 +75,18 @@ button, input, textarea { font: inherit; }
 .zero { color: #475467; }
 .positive-sticker {
   position: absolute;
-  right: 8px;
-  bottom: -12px;
-  z-index: 2;
-  width: 238px;
-  height: 172px;
+  right: 22px;
+  bottom: -20px;
+  z-index: 1;
+  width: 205px;
+  height: auto;
+  max-height: 185px;
   object-fit: contain;
   object-position: center bottom;
-  filter: drop-shadow(0 8px 10px rgba(24,49,83,.12));
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  filter: drop-shadow(0 8px 12px rgba(24, 49, 83, .14));
   pointer-events: none;
 }
 .panel {
@@ -187,8 +191,8 @@ button, input, textarea { font: inherit; }
   .top { padding: 15px; }
   .title h1 { font-size: 24px; }
   .balance-card { min-height: 126px; padding: 18px; }
-  .balance-card.has-sticker { padding-right: 150px; }
-  .positive-sticker { right: -8px; bottom: -8px; width: 160px; height: 130px; }
+  .balance-card.has-sticker { padding-right: 142px; }
+  .positive-sticker { right: 4px; bottom: -12px; width: 138px; max-height: 135px; }
   .big { font-size: 32px; }
   .calendar-head h2 { font-size: 18px; }
   .day { min-height: 60px; padding: 6px; }
