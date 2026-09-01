@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#183153">
   <title>Control Horas Guimi</title>
-  <link rel="stylesheet" href="./styles.css?v=20260901-3">
+  <link rel="stylesheet" href="./styles.css?v=20260901-4">
 </head>
 <body>
   <main class="app">
@@ -15,6 +15,8 @@
         <p>Guimi · calendario perpetuo</p>
       </div>
       <div class="toolbar">
+        <span class="sync-pill" id="syncStatus">Sin conectar</span>
+        <button class="btn secondary user-btn" id="accountBtn" type="button" hidden>Cuenta</button>
         <button class="btn" id="addBtn" type="button">+ Añadir</button>
         <button class="btn secondary icon" id="historyBtn" type="button" title="Histórico" aria-label="Abrir histórico">☰</button>
       </div>
@@ -25,13 +27,7 @@
         <small>SALDO ACUMULADO</small>
         <div class="big zero" id="totalBalance">0 h</div>
       </div>
-      <img
-        id="positiveSticker"
-        class="positive-sticker"
-        src="./assets/sticker-guimi-final.png?v=e5bbe347"
-        alt=""
-        hidden
-      >
+      <img id="positiveSticker" class="positive-sticker" src="./assets/sticker-guimi-final.png?v=e5bbe347" alt="" hidden>
     </section>
 
     <section class="panel">
@@ -41,23 +37,40 @@
           <button class="btn secondary" id="todayBtn" type="button">Hoy</button>
         </div>
         <h2 id="monthTitle"></h2>
-        <div class="nav">
-          <button class="btn secondary" id="nextBtn" type="button" aria-label="Mes siguiente">›</button>
-        </div>
+        <div class="nav"><button class="btn secondary" id="nextBtn" type="button" aria-label="Mes siguiente">›</button></div>
       </div>
-      <div class="week" aria-hidden="true">
-        <div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div>
-      </div>
+      <div class="week" aria-hidden="true"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div>
       <div class="grid" id="calendar"></div>
     </section>
   </main>
 
+  <div class="modal auth-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="dialog auth-dialog">
+      <div class="auth-brand">☁</div>
+      <h3 id="authTitle">Sincronizar mis horas</h3>
+      <p class="auth-copy">Entra con la misma cuenta en tus móviles y PCs para compartir el mismo calendario.</p>
+      <div class="field"><label for="authEmail">Email</label><input type="email" id="authEmail" autocomplete="email" placeholder="tu@email.com"></div>
+      <div class="field"><label for="authPassword">Contraseña</label><input type="password" id="authPassword" autocomplete="current-password" minlength="6" placeholder="Mínimo 6 caracteres"></div>
+      <div class="auth-message" id="authMessage"></div>
+      <div class="auth-actions">
+        <button class="btn secondary" id="signupBtn" type="button">Crear cuenta</button>
+        <button class="btn" id="loginBtn" type="button">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+    <div class="dialog">
+      <div class="dialog-head"><h3 id="accountTitle">Cuenta</h3><button class="close" id="accountClose" type="button">×</button></div>
+      <p class="account-email" id="accountEmail"></p>
+      <p class="hint">Tus datos están sincronizados con Supabase.</p>
+      <div class="actions account-actions"><button class="btn danger" id="logoutBtn" type="button">Cerrar sesión</button></div>
+    </div>
+  </div>
+
   <div class="modal" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
     <div class="dialog wide">
-      <div class="dialog-head">
-        <h3 id="historyTitle">Histórico</h3>
-        <button class="close" id="historyClose" type="button" aria-label="Cerrar">×</button>
-      </div>
+      <div class="dialog-head"><h3 id="historyTitle">Histórico</h3><button class="close" id="historyClose" type="button" aria-label="Cerrar">×</button></div>
       <div class="history-list" id="historyList"></div>
     </div>
   </div>
@@ -65,35 +78,21 @@
   <div class="modal" id="entryModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="dialog">
       <h3 id="modalTitle">Añadir movimiento</h3>
-      <div class="field">
-        <label for="dateInput">Fecha</label>
-        <input type="date" id="dateInput">
-      </div>
-      <div class="field">
-        <label for="noteInput">Concepto / notas</label>
-        <textarea id="noteInput" placeholder="Ej. Llegada a las 7:00"></textarea>
-      </div>
+      <div class="field"><label for="dateInput">Fecha</label><input type="date" id="dateInput"></div>
+      <div class="field"><label for="noteInput">Concepto / notas</label><textarea id="noteInput" placeholder="Ej. Llegada a las 7:00"></textarea></div>
       <div class="row">
-        <div class="field">
-          <label for="plusInput">Horas extra (+)</label>
-          <input type="number" min="0" step="0.25" id="plusInput" value="0">
-        </div>
-        <div class="field">
-          <label for="minusInput">Horas menos (-)</label>
-          <input type="number" min="0" step="0.25" id="minusInput" value="0">
-        </div>
+        <div class="field"><label for="plusInput">Horas extra (+)</label><input type="number" min="0" step="0.25" id="plusInput" value="0"></div>
+        <div class="field"><label for="minusInput">Horas menos (-)</label><input type="number" min="0" step="0.25" id="minusInput" value="0"></div>
       </div>
       <div class="hint" id="preview"></div>
       <div class="actions">
         <button class="btn danger" id="deleteBtn" type="button" hidden>Eliminar</button>
-        <div class="right-actions">
-          <button class="btn secondary" id="cancelBtn" type="button">Cancelar</button>
-          <button class="btn" id="saveBtn" type="button">Guardar</button>
-        </div>
+        <div class="right-actions"><button class="btn secondary" id="cancelBtn" type="button">Cancelar</button><button class="btn" id="saveBtn" type="button">Guardar</button></div>
       </div>
     </div>
   </div>
 
-  <script src="./app.js?v=20260901-1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./app.js?v=20260901-2"></script>
 </body>
 </html>
