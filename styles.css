@@ -51,38 +51,39 @@ button, input, textarea { font: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 126px;
+  min-height: 150px;
   margin: 20px 0;
-  padding: 22px 24px;
+  padding: 24px 28px;
   overflow: hidden;
   background: linear-gradient(135deg, #f3fff8, #e5f7ed);
   border: 1px solid #b7dfc8;
   border-radius: 18px;
   box-shadow: 0 5px 18px rgba(8, 116, 67, .08);
 }
-.balance-card.has-sticker { padding-right: 176px; }
-.balance-main { position: relative; z-index: 2; }
+.balance-card.has-sticker { padding-right: 255px; }
+.balance-main { position: relative; z-index: 3; }
 .balance-card small {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: #436253;
   font-weight: 850;
   letter-spacing: .35px;
 }
-.big { font-size: 38px; line-height: 1; font-weight: 900; }
+.big { font-size: 42px; line-height: 1; font-weight: 900; }
 .pos { color: #087443; }
 .neg { color: #b42318; }
 .zero { color: #475467; }
 .positive-sticker {
   position: absolute;
-  right: 18px;
-  bottom: -7px;
-  z-index: 1;
-  width: 142px;
-  height: 142px;
+  right: 8px;
+  bottom: -12px;
+  z-index: 2;
+  width: 238px;
+  height: 172px;
   object-fit: contain;
   object-position: center bottom;
-  border-radius: 16px;
+  filter: drop-shadow(0 8px 10px rgba(24,49,83,.12));
+  pointer-events: none;
 }
 .panel {
   padding: 16px;
@@ -185,10 +186,10 @@ button, input, textarea { font: inherit; }
   .app { padding: 12px; }
   .top { padding: 15px; }
   .title h1 { font-size: 24px; }
-  .balance-card { min-height: 108px; padding: 16px; }
-  .balance-card.has-sticker { padding-right: 118px; }
-  .positive-sticker { right: 5px; bottom: -2px; width: 108px; height: 108px; }
-  .big { font-size: 30px; }
+  .balance-card { min-height: 126px; padding: 18px; }
+  .balance-card.has-sticker { padding-right: 150px; }
+  .positive-sticker { right: -8px; bottom: -8px; width: 160px; height: 130px; }
+  .big { font-size: 32px; }
   .calendar-head h2 { font-size: 18px; }
   .day { min-height: 60px; padding: 6px; }
   .badge { margin-top: 10px; font-size: 10px; }
