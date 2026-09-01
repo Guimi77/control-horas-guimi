@@ -1,0 +1,196 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #eaf0f7;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #e7eef7 0%, #f4f7fb 45%, #eef3f8 100%);
+}
+button, input, textarea { font: inherit; }
+.app { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 18px 20px;
+  color: #fff;
+  background: #183153;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(24, 49, 83, .14);
+}
+.title h1 { margin: 0; font-size: 28px; }
+.title p { margin: 4px 0 0; color: #c8d7ea; }
+.toolbar, .nav, .right-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 750;
+  cursor: pointer;
+  color: #fff;
+  background: #0f6fbf;
+  box-shadow: 0 2px 6px rgba(15, 111, 191, .14);
+}
+.btn:hover { filter: brightness(.96); }
+.btn.secondary {
+  color: #183153;
+  background: #f7fbff;
+  border: 1px solid #b8c8da;
+  box-shadow: none;
+}
+.btn.icon { width: 42px; padding: 10px 0; font-size: 19px; }
+.btn.danger { background: #b42318; }
+.balance-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 126px;
+  margin: 20px 0;
+  padding: 22px 24px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f3fff8, #e5f7ed);
+  border: 1px solid #b7dfc8;
+  border-radius: 18px;
+  box-shadow: 0 5px 18px rgba(8, 116, 67, .08);
+}
+.balance-card.has-sticker { padding-right: 176px; }
+.balance-main { position: relative; z-index: 2; }
+.balance-card small {
+  display: block;
+  margin-bottom: 6px;
+  color: #436253;
+  font-weight: 850;
+  letter-spacing: .35px;
+}
+.big { font-size: 38px; line-height: 1; font-weight: 900; }
+.pos { color: #087443; }
+.neg { color: #b42318; }
+.zero { color: #475467; }
+.positive-sticker {
+  position: absolute;
+  right: 18px;
+  bottom: -7px;
+  z-index: 1;
+  width: 142px;
+  height: 142px;
+  object-fit: contain;
+  object-position: center bottom;
+  border-radius: 16px;
+}
+.panel {
+  padding: 16px;
+  background: #f9fbfd;
+  border: 1px solid #cfd9e5;
+  border-radius: 18px;
+  box-shadow: 0 6px 20px rgba(24, 49, 83, .05);
+}
+.calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.calendar-head h2 { margin: 0; color: #183153; text-align: center; }
+.week, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.week div {
+  padding: 6px;
+  color: #56708d;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+.day {
+  position: relative;
+  min-height: 88px;
+  padding: 8px;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #d9e2ec;
+  border-radius: 12px;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.day:hover { transform: translateY(-1px); border-color: #8fb2d5; box-shadow: 0 4px 10px rgba(24, 49, 83, .07); }
+.day.muted { opacity: .38; background: #f4f6f9; }
+.day.today { outline: 2px solid #0f6fbf; outline-offset: -1px; background: #eef7ff; }
+.day.positive { background: #edf9f2; border-color: #b9dfc8; }
+.day.negative { background: #fff0ef; border-color: #efc0bc; }
+.day.neutral-entry { background: #fff9e8; border-color: #eadcae; }
+.num { font-weight: 850; }
+.badge { margin-top: 18px; font-size: 12px; font-weight: 850; }
+.dot {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 7px;
+  height: 7px;
+  background: #0f6fbf;
+  border-radius: 50%;
+}
+.positive .dot { background: #1b8a55; }
+.negative .dot { background: #c53a30; }
+.neutral-entry .dot { background: #b08516; }
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(16, 35, 60, .62);
+}
+.modal.show { display: flex; }
+.dialog {
+  width: min(480px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 20px;
+  background: #f9fbfd;
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(16, 35, 60, .25);
+}
+.dialog.wide { width: min(620px, 100%); }
+.dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dialog h3 { margin: 0; color: #183153; }
+.close { border: 0; cursor: pointer; color: #56708d; background: transparent; font-size: 28px; }
+.field { margin: 12px 0; }
+.field label { display: block; margin-bottom: 5px; color: #344a62; font-size: 13px; font-weight: 750; }
+.field input, .field textarea {
+  width: 100%;
+  padding: 11px;
+  background: #fff;
+  border: 1px solid #b9c8d8;
+  border-radius: 10px;
+}
+.field input:focus, .field textarea:focus { outline: 2px solid #c9e4f8; border-color: #0f6fbf; }
+.field textarea { min-height: 80px; resize: vertical; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
+.hint { min-height: 18px; color: #667085; font-size: 12px; }
+.history-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.item { padding: 10px; cursor: pointer; background: #fff; border: 1px solid #d9e2ec; border-radius: 12px; }
+.item:hover { background: #eef5fb; }
+.item-top { display: flex; justify-content: space-between; gap: 8px; font-weight: 850; }
+.item-note { margin-top: 4px; color: #667085; font-size: 13px; }
+.empty { padding: 30px; color: #98a2b3; text-align: center; }
+@media (max-width: 640px) {
+  .app { padding: 12px; }
+  .top { padding: 15px; }
+  .title h1 { font-size: 24px; }
+  .balance-card { min-height: 108px; padding: 16px; }
+  .balance-card.has-sticker { padding-right: 118px; }
+  .positive-sticker { right: 5px; bottom: -2px; width: 108px; height: 108px; }
+  .big { font-size: 30px; }
+  .calendar-head h2 { font-size: 18px; }
+  .day { min-height: 60px; padding: 6px; }
+  .badge { margin-top: 10px; font-size: 10px; }
+  .row { grid-template-columns: 1fr; gap: 0; }
+}
