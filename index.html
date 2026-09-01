@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Control Horas Guimi</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}.app{max-width:1100px;margin:auto;padding:20px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.title h1{margin:0;font-size:28px}.title p{margin:4px 0 0;color:#667085}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.card{background:white;border:1px solid #e4e7ec;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(16,24,40,.04)}.card small{color:#667085}.big{font-size:28px;font-weight:800;margin-top:6px}.pos{color:#087443}.neg{color:#b42318}.zero{color:#475467}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;background:#172033;color:white}.btn.secondary{background:white;color:#172033;border:1px solid #d0d5dd}.btn.danger{background:#b42318}.layout{display:grid;grid-template-columns:1.3fr .7fr;gap:16px}.panel{background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:16px}.calendar-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.calendar-head h2{margin:0;text-transform:capitalize}.nav{display:flex;gap:6px}.week,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.week div{text-align:center;color:#667085;font-size:12px;font-weight:700;padding:6px}.day{min-height:88px;border:1px solid #eaecf0;border-radius:12px;padding:8px;background:white;cursor:pointer;position:relative}.day:hover{border-color:#98a2b3}.day.muted{opacity:.35}.day.today{outline:2px solid #172033}.num{font-weight:800}.badge{margin-top:18px;font-size:12px;font-weight:800}.dot{width:7px;height:7px;border-radius:50%;background:#172033;position:absolute;top:9px;right:9px}.history h3{margin-top:0}.history-list{display:flex;flex-direction:column;gap:8px;max-height:560px;overflow:auto}.item{border:1px solid #eaecf0;border-radius:12px;padding:10px;cursor:pointer}.item:hover{background:#f9fafb}.item-top{display:flex;justify-content:space-between;gap:8px;font-weight:800}.item-note{font-size:13px;color:#667085;margin-top:4px}.empty{color:#98a2b3;text-align:center;padding:30px 10px}.modal{display:none;position:fixed;inset:0;background:rgba(16,24,40,.45);align-items:center;justify-content:center;padding:16px;z-index:20}.modal.show{display:flex}.dialog{width:min(480px,100%);background:white;border-radius:18px;padding:20px;box-shadow:0 18px 60px rgba(16,24,40,.25)}.dialog h3{margin-top:0}.field{margin:12px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}.field input,.field textarea{width:100%;padding:11px;border:1px solid #d0d5dd;border-radius:10px;font:inherit}.field textarea{min-height:80px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;justify-content:space-between;gap:8px;margin-top:16px}.right-actions{display:flex;gap:8px}.hint{font-size:12px;color:#667085;margin-top:8px}.footer{margin:16px 0;color:#667085;font-size:12px;text-align:center}@media(max-width:800px){.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.day{min-height:68px;padding:6px}.badge{margin-top:10px;font-size:10px}.app{padding:12px}}@media(max-width:480px){.cards{grid-template-columns:1fr 1fr}.big{font-size:22px}.week div{font-size:10px}.day{min-height:58px}.calendar-head h2{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="title"><h1>Control de horas</h1><p>Guimi · saldo acumulado y calendario perpetuo</p></div>
+    <div class="toolbar">
+      <button class="btn" id="addBtn">+ Añadir</button>
+      <button class="btn secondary" id="exportBtn">Exportar copia</button>
+      <button class="btn secondary" id="importBtn">Importar copia</button>
+      <input type="file" id="fileInput" accept="application/json" hidden />
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card"><small>Saldo total</small><div class="big" id="totalBalance">0 h</div></div>
+    <div class="card"><small>Este año</small><div class="big" id="yearBalance">0 h</div></div>
+    <div class="card"><small>Este mes</small><div class="big" id="monthBalance">0 h</div></div>
+    <div class="card"><small>Esta semana</small><div class="big" id="weekBalance">0 h</div></div>
+  </div>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="calendar-head">
+        <div class="nav"><button class="btn secondary" id="prevBtn">‹</button><button class="btn secondary" id="todayBtn">Hoy</button></div>
+        <h2 id="monthTitle"></h2>
+        <div class="nav"><button class="btn secondary" id="nextBtn">›</button></div>
+      </div>
+      <div class="week"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div>
+      <div class="grid" id="calendar"></div>
+    </section>
+
+    <aside class="panel history">
+      <h3>Histórico</h3>
+      <div class="history-list" id="historyList"></div>
+    </aside>
+  </div>
+  <div class="footer">Los datos se guardan en este navegador. Usa “Exportar copia” periódicamente como respaldo.</div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="dialog">
+    <h3 id="modalTitle">Añadir movimiento</h3>
+    <div class="field"><label>Fecha</label><input type="date" id="dateInput"></div>
+    <div class="field"><label>Concepto / notas</label><textarea id="noteInput" placeholder="Ej. Arribada 7:00"></textarea></div>
+    <div class="row">
+      <div class="field"><label>Horas extra (+)</label><input type="number" min="0" step="0.25" id="plusInput" value="0"></div>
+      <div class="field"><label>Horas menos (-)</label><input type="number" min="0" step="0.25" id="minusInput" value="0"></div>
+    </div>
+    <div class="hint" id="preview">Balance del movimiento: 0 h</div>
+    <div class="actions">
+      <button class="btn danger" id="deleteBtn" style="visibility:hidden">Eliminar</button>
+      <div class="right-actions"><button class="btn secondary" id="cancelBtn">Cancelar</button><button class="btn" id="saveBtn">Guardar</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY='controlHorasGuimi.v1';
+const seed=[
+['2026-07-28','Arribada a les 7:00',0.5,0],
+['2026-07-29','Mal de cap i de panxa',0,1],
+['2026-07-30','Arribada a les 7:00',0.5,0],
+['2026-08-03','arribada 7:00',0.5,0],
+['2026-08-04','arribada 7:00',0.5,0],
+['2026-08-05','arribada 7:00 / sortida 15:15',0.5,0],
+['2026-08-06','arribada 6:45',0.5,1],
+['2026-08-07','arribada 7:00',0.5,0],
+['2026-08-10','arribada 7:00',0.5,0],
+['2026-08-12','',0,2],
+['2026-08-13','arribada 7:00',0.5,0.5],
+['2026-08-14','arribada 7:00',0.5,0.5],
+['2026-08-25','',0.25,0.25],
+['2026-08-26','',0.5,0],
+['2026-08-27','',0.5,0],
+['2026-08-28','',0.5,1.5],
+['2026-08-31','',0.5,0]
+].map((x,i)=>({id:'seed-'+i,date:x[0],note:x[1],plus:x[2],minus:x[3]}));
+
+let entries=load();
+let cursor=new Date();
+let editingId=null;
+const $=id=>document.getElementById(id);
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));return Array.isArray(v)?v:seed}catch{return seed}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(entries))}
+function localISO(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
+function parseISO(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+function balance(e){return Number(e.plus||0)-Number(e.minus||0)}
+function fmt(n){const v=Math.round(n*100)/100;return `${v>0?'+':''}${v.toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2})} h`}
+function cls(n){return n>0?'pos':n<0?'neg':'zero'}
+function setMetric(id,n){const el=$(id);el.textContent=fmt(n);el.className='big '+cls(n)}
+function sum(filter=()=>true){return entries.filter(filter).reduce((a,e)=>a+balance(e),0)}
+function startOfWeek(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return x}
+function endOfWeek(d){const x=startOfWeek(d);x.setDate(x.getDate()+6);return x}
+function renderMetrics(){const now=new Date();setMetric('totalBalance',sum());setMetric('yearBalance',sum(e=>parseISO(e.date).getFullYear()===cursor.getFullYear()));setMetric('monthBalance',sum(e=>{const d=parseISO(e.date);return d.getFullYear()===cursor.getFullYear()&&d.getMonth()===cursor.getMonth()}));const a=startOfWeek(now),b=endOfWeek(now);setMetric('weekBalance',sum(e=>{const d=parseISO(e.date);return d>=a&&d<=b}))}
+function entriesForDate(s){return entries.filter(e=>e.date===s)}
+function renderCalendar(){const y=cursor.getFullYear(),m=cursor.getMonth();$('monthTitle').textContent=new Intl.DateTimeFormat('es-ES',{month:'long',year:'numeric'}).format(new Date(y,m,1));const first=new Date(y,m,1);const offset=(first.getDay()+6)%7;const start=new Date(y,m,1-offset);const today=localISO(new Date());const box=$('calendar');box.innerHTML='';for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=localISO(d),daily=entriesForDate(iso),val=daily.reduce((a,e)=>a+balance(e),0);const div=document.createElement('div');div.className='day'+(d.getMonth()!==m?' muted':'')+(iso===today?' today':'');div.innerHTML=`<div class="num">${d.getDate()}</div>${daily.length?'<span class="dot"></span>':''}${daily.length?`<div class="badge ${cls(val)}">${fmt(val)}</div>`:''}`;div.onclick=()=>openModal(iso,daily.length===1?daily[0].id:null);box.appendChild(div)}}
+function renderHistory(){const list=$('historyList');const sorted=[...entries].sort((a,b)=>b.date.localeCompare(a.date));if(!sorted.length){list.innerHTML='<div class="empty">Aún no hay movimientos</div>';return}list.innerHTML='';sorted.forEach(e=>{const d=parseISO(e.date),div=document.createElement('div');div.className='item';div.innerHTML=`<div class="item-top"><span>${new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'}).format(d)}</span><span class="${cls(balance(e))}">${fmt(balance(e))}</span></div><div class="item-note">${escapeHtml(e.note)||`+${e.plus||0} h / -${e.minus||0} h`}</div>`;div.onclick=()=>openModal(e.date,e.id);list.appendChild(div)})}
+function escapeHtml(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function render(){renderMetrics();renderCalendar();renderHistory()}
+function openModal(date=localISO(new Date()),id=null){editingId=id;let e=id?entries.find(x=>x.id===id):null;$('modalTitle').textContent=e?'Editar movimiento':'Añadir movimiento';$('dateInput').value=e?.date||date;$('noteInput').value=e?.note||'';$('plusInput').value=e?.plus??0;$('minusInput').value=e?.minus??0;$('deleteBtn').style.visibility=e?'visible':'hidden';updatePreview();$('modal').classList.add('show')}
+function closeModal(){$('modal').classList.remove('show');editingId=null}
+function updatePreview(){const n=(Number($('plusInput').value)||0)-(Number($('minusInput').value)||0);$('preview').textContent='Balance del movimiento: '+fmt(n);$('preview').className='hint '+cls(n)}
+function save(){const date=$('dateInput').value;if(!date)return alert('Selecciona una fecha.');const plus=Math.max(0,Number($('plusInput').value)||0),minus=Math.max(0,Number($('minusInput').value)||0),note=$('noteInput').value.trim();if(plus===0&&minus===0&&!note)return alert('Introduce horas o una nota.');if(editingId){const e=entries.find(x=>x.id===editingId);Object.assign(e,{date,note,plus,minus})}else{entries.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),date,note,plus,minus})}persist();cursor=parseISO(date);closeModal();render()}
+function remove(){if(!editingId)return;if(confirm('¿Eliminar este movimiento?')){entries=entries.filter(e=>e.id!==editingId);persist();closeModal();render()}}
+function exportData(){const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),entries},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='control-horas-guimi-'+localISO(new Date())+'.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(file){const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result);if(!Array.isArray(data.entries))throw 0;if(confirm(`Se importarán ${data.entries.length} movimientos y sustituirán los actuales. ¿Continuar?`)){entries=data.entries;persist();render()}}catch{alert('La copia no tiene un formato válido.')}};r.readAsText(file)}
+$('addBtn').onclick=()=>openModal();$('prevBtn').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);render()};$('nextBtn').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);render()};$('todayBtn').onclick=()=>{cursor=new Date();render()};$('cancelBtn').onclick=closeModal;$('saveBtn').onclick=save;$('deleteBtn').onclick=remove;$('plusInput').oninput=updatePreview;$('minusInput').oninput=updatePreview;$('modal').onclick=e=>{if(e.target===$('modal'))closeModal()};$('exportBtn').onclick=exportData;$('importBtn').onclick=()=>$('fileInput').click();$('fileInput').onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value=''};
+render();
+</script>
+</body>
+</html>
