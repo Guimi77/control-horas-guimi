@@ -4,26 +4,6 @@ const SUPABASE_URL = 'https://sweybzzhxyktlimknltv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Ij2zPutXiIUF3bdgI_tPWg_tTRg-JjW';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const seed = [
-  ['2026-07-28', 'Arribada a les 7:00', 0.5, 0],
-  ['2026-07-29', '', 0, 1],
-  ['2026-07-30', 'Arribada a les 7:00', 0.5, 0],
-  ['2026-08-03', 'arribada 7:00', 0.5, 0],
-  ['2026-08-04', 'arribada 7:00', 0.5, 0],
-  ['2026-08-05', 'arribada 7:00 / sortida 15:15', 0.5, 0],
-  ['2026-08-06', 'arribada 6:45', 0.5, 1],
-  ['2026-08-07', 'arribada 7:00', 0.5, 0],
-  ['2026-08-10', 'arribada 7:00', 0.5, 0],
-  ['2026-08-12', '', 0, 2],
-  ['2026-08-13', 'arribada 7:00', 0.5, 0.5],
-  ['2026-08-14', 'arribada 7:00', 0.5, 0.5],
-  ['2026-08-25', '', 0.25, 0.25],
-  ['2026-08-26', '', 0.5, 0],
-  ['2026-08-27', '', 0.5, 0],
-  ['2026-08-28', '', 0.5, 1.5],
-  ['2026-08-31', '', 0.5, 0]
-].map((row, index) => ({ id: `seed-${index}`, date: row[0], note: row[1], plus: row[2], minus: row[3] }));
-
 const $ = id => document.getElementById(id);
 let entries = loadLocalEntries();
 let cursor = new Date();
@@ -33,12 +13,18 @@ let currentUser = null;
 function loadLocalEntries() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return Array.isArray(stored) ? stored : seed;
+    return Array.isArray(stored) ? stored : [];
   } catch {
-    return seed;
+    return [];
   }
 }
 function persistLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
+function clearLocalForNewUser(userId) {
+  entries = [];
+  persistLocal();
+  localStorage.setItem(MIGRATION_KEY, userId);
+  render();
+}
 function setSync(text, state = '') {
   const el = $('syncStatus');
   el.textContent = text;
@@ -140,7 +126,7 @@ function hideAuth(){ $('authModal').classList.remove('show'); $('authMessage').t
 function setAccount(user) {
   currentUser = user || null;
   $('accountBtn').hidden = !currentUser;
-  $('accountBtn').textContent = currentUser ? 'Cuenta' : 'Cuenta';
+  $('accountBtn').textContent = 'Cuenta';
   $('accountEmail').textContent = currentUser?.email || '';
   $('addBtn').disabled = !currentUser; $('historyBtn').disabled = !currentUser;
 }
@@ -162,6 +148,7 @@ async function signup() {
   $('authMessage').textContent='Creando cuenta…'; $('authMessage').className='auth-message';
   const { data,error } = await sb.auth.signUp({email,password});
   if(error){$('authMessage').textContent=error.message;$('authMessage').className='auth-message error';return;}
+  if (data.user) clearLocalForNewUser(data.user.id);
   if(data.session){await handleSignedIn(data.user);} else {$('authMessage').textContent='Cuenta creada. Revisa tu email para confirmarla y después pulsa Entrar.';$('authMessage').className='auth-message ok';}
 }
 async function logout(){ await sb.auth.signOut(); currentUser=null; entries=[]; persistLocal(); render(); setAccount(null); setSync('Sin conectar'); $('accountModal').classList.remove('show'); showAuth(); }
@@ -215,10 +202,10 @@ $('logoutBtn').addEventListener('click',logout);
 async function init(){
   render(); setAccount(null); setSync('Comprobando…','busy');
   const { data: { session } } = await sb.auth.getSession();
-  if(session?.user) await handleSignedIn(session.user); else { setSync('Sin conectar'); showAuth(); }
+  if(session?.user) await handleSignedIn(session.user); else { entries=[]; render(); setSync('Sin conectar'); showAuth(); }
   sb.auth.onAuthStateChange(async (event,sessionNow)=>{
     if(event==='SIGNED_IN'&&sessionNow?.user&&sessionNow.user.id!==currentUser?.id) await handleSignedIn(sessionNow.user);
-    if(event==='SIGNED_OUT'){setAccount(null);setSync('Sin conectar');showAuth();}
+    if(event==='SIGNED_OUT'){entries=[];render();setAccount(null);setSync('Sin conectar');showAuth();}
   });
   window.addEventListener('focus',()=>{ if(currentUser) fetchRemoteEntries(); });
 }
