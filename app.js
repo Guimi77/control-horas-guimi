@@ -9,6 +9,7 @@ let entries = loadLocalEntries();
 let cursor = new Date();
 let editingId = null;
 let currentUser = null;
+let offlineMode = false;
 
 function loadLocalEntries() {
   try {
@@ -123,12 +124,23 @@ function showAuth(message='') {
   $('authMessage').textContent = message; $('authMessage').className='auth-message'; $('authModal').classList.add('show');
 }
 function hideAuth(){ $('authModal').classList.remove('show'); $('authMessage').textContent=''; }
+function useOfflineMode(message='Solo en este dispositivo') {
+  offlineMode = true;
+  currentUser = null;
+  hideAuth();
+  setAccount(null);
+  $('addBtn').disabled = false;
+  $('historyBtn').disabled = false;
+  setSync(message);
+  entries = loadLocalEntries();
+  render();
+}
 function setAccount(user) {
   currentUser = user || null;
   $('accountBtn').hidden = !currentUser;
   $('accountBtn').textContent = 'Cuenta';
   $('accountEmail').textContent = currentUser?.email || '';
-  $('addBtn').disabled = !currentUser; $('historyBtn').disabled = !currentUser;
+  $('addBtn').disabled = !currentUser && !offlineMode; $('historyBtn').disabled = !currentUser && !offlineMode;
 }
 async function handleSignedIn(user) {
   setAccount(user); hideAuth();
@@ -154,20 +166,39 @@ async function signup() {
 async function logout(){ await sb.auth.signOut(); currentUser=null; entries=[]; persistLocal(); render(); setAccount(null); setSync('Sin conectar'); $('accountModal').classList.remove('show'); showAuth(); }
 
 function openEntryModal(date=localISO(new Date()), id=null){
-  if(!currentUser){showAuth();return;}
+  if(!currentUser && !offlineMode){showAuth();return;}
   editingId=id; const entry=id?entries.find(item=>item.id===id):null;
   $('modalTitle').textContent=entry?'Editar movimiento':'Añadir movimiento'; $('dateInput').value=entry?.date||date; $('noteInput').value=entry?.note||''; $('plusInput').value=entry?.plus??0; $('minusInput').value=entry?.minus??0; $('deleteBtn').hidden=!entry; updatePreview(); $('entryModal').classList.add('show');
 }
 function closeEntryModal(){ $('entryModal').classList.remove('show'); editingId=null; }
-function openHistory(){ if(!currentUser){showAuth();return;} renderHistory(); $('historyModal').classList.add('show'); }
+function openHistory(){ if(!currentUser && !offlineMode){showAuth();return;} renderHistory(); $('historyModal').classList.add('show'); }
 function closeHistory(){ $('historyModal').classList.remove('show'); }
 function updatePreview(){ const value=(Number($('plusInput').value)||0)-(Number($('minusInput').value)||0); $('preview').textContent=`Balance del movimiento: ${formatHours(value)}`; $('preview').className=`hint ${balanceClass(value)}`; }
 
 async function saveEntry(){
-  if(!currentUser) return showAuth();
+  if(!currentUser && !offlineMode) return showAuth();
   const date=$('dateInput').value; if(!date) return alert('Selecciona una fecha.');
   const plus=Math.max(0,Number($('plusInput').value)||0), minus=Math.max(0,Number($('minusInput').value)||0), note=$('noteInput').value.trim();
   if(plus===0&&minus===0&&!note) return alert('Introduce horas o una nota.');
+
+  if (offlineMode && !currentUser) {
+    if (editingId) {
+      const entry = entries.find(item => item.id === editingId);
+      if (entry) Object.assign(entry,{date,note,plus,minus});
+    } else {
+      entries.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+        date,note,plus,minus
+      });
+    }
+    persistLocal();
+    cursor=parseISO(date);
+    closeEntryModal();
+    render();
+    setSync('Solo en este dispositivo');
+    return;
+  }
+
   setSync('Guardando…','busy');
   let error;
   if(editingId){ ({error}=await sb.from('time_entries').update({entry_date:date,note,plus_hours:plus,minus_hours:minus}).eq('id',editingId)); }
@@ -177,6 +208,16 @@ async function saveEntry(){
 }
 async function deleteEntry(){
   if(!editingId||!confirm('¿Eliminar este movimiento?')) return;
+
+  if (offlineMode && !currentUser) {
+    entries = entries.filter(entry => entry.id !== editingId);
+    persistLocal();
+    closeEntryModal();
+    render();
+    setSync('Solo en este dispositivo');
+    return;
+  }
+
   setSync('Eliminando…','busy');
   const {error}=await sb.from('time_entries').delete().eq('id',editingId);
   if(error){console.error(error);setSync('Error al eliminar','error');return alert('No se pudo eliminar.');}
@@ -193,7 +234,7 @@ $('plusInput').addEventListener('input',updatePreview); $('minusInput').addEvent
 $('positiveSticker').addEventListener('error',function(){this.hidden=true;$('balanceCard').classList.remove('has-sticker');});
 $('entryModal').addEventListener('click',event=>{if(event.target===$('entryModal'))closeEntryModal();});
 $('historyModal').addEventListener('click',event=>{if(event.target===$('historyModal'))closeHistory();});
-$('loginBtn').addEventListener('click',login); $('signupBtn').addEventListener('click',signup);
+$('loginBtn').addEventListener('click',login); $('signupBtn').addEventListener('click',signup); $('offlineBtn').addEventListener('click',()=>useOfflineMode());
 $('authPassword').addEventListener('keydown',event=>{if(event.key==='Enter')login();});
 $('accountBtn').addEventListener('click',()=>{$('accountModal').classList.add('show');});
 $('accountClose').addEventListener('click',()=>{$('accountModal').classList.remove('show');});
@@ -201,12 +242,29 @@ $('logoutBtn').addEventListener('click',logout);
 
 async function init(){
   render(); setAccount(null); setSync('Comprobando…','busy');
-  const { data: { session } } = await sb.auth.getSession();
-  if(session?.user) await handleSignedIn(session.user); else { entries=[]; render(); setSync('Sin conectar'); showAuth(); }
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if(session?.user) {
+      offlineMode = false;
+      await handleSignedIn(session.user);
+    } else {
+      useOfflineMode('Solo en este dispositivo');
+    }
+  } catch (error) {
+    console.error(error);
+    useOfflineMode('Sin conexión · modo local');
+  }
+
   sb.auth.onAuthStateChange(async (event,sessionNow)=>{
-    if(event==='SIGNED_IN'&&sessionNow?.user&&sessionNow.user.id!==currentUser?.id) await handleSignedIn(sessionNow.user);
-    if(event==='SIGNED_OUT'){entries=[];render();setAccount(null);setSync('Sin conectar');showAuth();}
+    if(event==='SIGNED_IN'&&sessionNow?.user&&sessionNow.user.id!==currentUser?.id) {
+      offlineMode = false;
+      await handleSignedIn(sessionNow.user);
+    }
+    if(event==='SIGNED_OUT'){
+      useOfflineMode('Solo en este dispositivo');
+    }
   });
+
   window.addEventListener('focus',()=>{ if(currentUser) fetchRemoteEntries(); });
 }
 init();
