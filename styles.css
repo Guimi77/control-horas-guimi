@@ -168,3 +168,5 @@ button, input, textarea { font: inherit; }
   .row { grid-template-columns: 1fr; gap: 0; }
   .auth-actions { grid-template-columns: 1fr; }
 }
+
+.offline-btn { width: 100%; margin-top: 10px; }
